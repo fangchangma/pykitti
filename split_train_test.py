@@ -5,14 +5,19 @@ import numpy as np
 import h5py
 from mpl_toolkits.mplot3d import Axes3D
 import os
+from multiprocessing.dummy import Pool as ThreadPool 
 
 import pykitti
 
 __author__ = "Fangchang Ma"
 __email__ = "fcma@mit.edu"
 
+do_display = False
+do_write = True
+
 # Change this to the directory where you store KITTI data
 basedir = '/home/fangchangma/dataset/KITTI_Dataset/dataset'
+outDir = '/home/fangchangma/KITTI/'
 
 def is_in_view(u, v, z_c, height, width):
 	return (z_c>0 and u>=0 and u<width and v>=0 and v<height)
@@ -69,17 +74,17 @@ def write_to_hdf5(filename, rgb, depth):
 	depth_dataset[...] = depth
 	file.close()
 
-def iterate_sequence(sequence, split, do_display, do_write):
+def iterate_sequence(sequence, split):
 	# Load the data. Optionally, specify the frame range to load.
 	# Passing imformat='cv2' will convert images to uint8 and BGR for
 	# easy use with OpenCV.
 	# dataset = pykitti.odometry(basedir, sequence, frames=range(0, 500, 500))
 	dataset = pykitti.odometry(basedir, sequence)
 
-	outDir = os.path.join(basedir, split, sequence)
+	targetDir = os.path.join(outDir, split, sequence)
 	if do_write:
-		if not os.path.exists(outDir):
-			os.mkdir(outDir)
+		if not os.path.exists(targetDir):
+			os.mkdir(targetDir)
 
 	# Create data iterator
 	gray_iterator = dataset.gray
@@ -148,31 +153,39 @@ def iterate_sequence(sequence, split, do_display, do_write):
 			plt.pause(0.5)
 
 		if do_write:
-			filenameL = os.path.join(outDir, '%05d-L.h5' % i)
-			filenameR = os.path.join(outDir, '%05d-R.h5' % i)
+			filenameL = os.path.join(targetDir, '%05d-L.h5' % i)
+			filenameR = os.path.join(targetDir, '%05d-R.h5' % i)
 			write_to_hdf5(filenameL, first_rgb[0], depth_image2)
 			write_to_hdf5(filenameR, first_rgb[1], depth_image3)
 
 def main():
-	do_display = False
-	do_write = True
-
-	trainDir = os.path.join(basedir, 'train')
-	testDir = os.path.join(basedir, 'test')
+	trainDir = os.path.join(outDir, 'train')
+	testDir = os.path.join(outDir, 'test')
 
 	# Create training set, 00 - 10
 	if not os.path.exists(trainDir):
 		os.mkdir(trainDir)
-	for i in range(11):
-		sequence = '%02d' % i
-		iterate_sequence(sequence, 'train', do_display, do_write)
+
+	pool = ThreadPool(10) 
+	# for i in range(11):
+	# 	sequence = '%02d' % i
+	# 	iterate_sequence(sequence, 'train')
+	sequences = ['%02d' % i for i in range(11)]
+	splits = ['train' for i in range(11)]
+	pool.starmap(iterate_sequence, zip(sequences, splits))
 
 	# Create test set, 11 - 21
 	if not os.path.exists(testDir):
 		os.mkdir(testDir)
-	for i in range(11, 22):
-		sequence = '%02d' % i
-		iterate_sequence(sequence, 'test', do_display, do_write)
+	# for i in range(11, 22):
+	# 	sequence = '%02d' % i
+	# 	iterate_sequence(sequence, 'test')
+	sequences = ['%02d' % i for i in range(11, 22)]
+	splits = ['test' for i in range(11, 22)]
+	pool.starmap(iterate_sequence, zip(sequences, splits))
+
+	pool.close() 
+	pool.join() 
 
 if __name__ == "__main__":
     main()
