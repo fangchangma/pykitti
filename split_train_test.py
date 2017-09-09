@@ -17,7 +17,7 @@ do_write = True
 
 # Change this to the directory where you store KITTI data
 basedir = '/home/fangchangma/dataset/KITTI_Dataset/dataset'
-outDir = '/home/fangchangma/KITTI/'
+outDir = '/home/fangchangma/dataset/KITTI_Dataset/dataset'
 
 def is_in_view(u, v, z_c, height, width):
 	return (z_c>0 and u>=0 and u<width and v>=0 and v<height)
@@ -68,8 +68,10 @@ def overlay_rgb_depth(rgb, depth):
 
 def write_to_hdf5(filename, rgb, depth):
 	file = h5py.File(filename, 'w')
-	rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8', compression="gzip")
-	depth_dataset = file.create_dataset("depth", depth.shape, 'float16', compression="gzip")
+	# rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8', compression="gzip")
+	# depth_dataset = file.create_dataset("depth", depth.shape, 'float16', compression="gzip")
+	rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8')
+	depth_dataset = file.create_dataset("depth", depth.shape, 'float16')
 	rgb_dataset[...] = rgb
 	depth_dataset[...] = depth
 	file.close()
