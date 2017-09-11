@@ -68,11 +68,12 @@ def overlay_rgb_depth(rgb, depth):
 
 def write_to_hdf5(filename, rgb, depth):
 	file = h5py.File(filename, 'w')
-	# rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8', compression="gzip")
-	# depth_dataset = file.create_dataset("depth", depth.shape, 'float16', compression="gzip")
-	rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8')
-	depth_dataset = file.create_dataset("depth", depth.shape, 'float16')
-	rgb_dataset[...] = rgb
+	rgb_torch_format = np.transpose( rgb, (2, 0, 1) )
+	rgb_dataset = file.create_dataset("rgb", rgb_torch_format.shape, 'uint8', compression="gzip")
+	depth_dataset = file.create_dataset("depth", depth.shape, 'float16', compression="gzip")
+	# rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8')
+	# depth_dataset = file.create_dataset("depth", depth.shape, 'float16')
+	rgb_dataset[...] = rgb_torch_format
 	depth_dataset[...] = depth
 	file.close()
 
@@ -169,22 +170,22 @@ def main():
 		os.mkdir(trainDir)
 
 	pool = ThreadPool(10) 
-	# for i in range(11):
-	# 	sequence = '%02d' % i
-	# 	iterate_sequence(sequence, 'train')
-	sequences = ['%02d' % i for i in range(11)]
-	splits = ['train' for i in range(11)]
-	pool.starmap(iterate_sequence, zip(sequences, splits))
+	for i in range(11):
+		sequence = '%02d' % i
+		iterate_sequence(sequence, 'train')
+	# sequences = ['%02d' % i for i in range(11)]
+	# splits = ['train' for i in range(11)]
+	# pool.starmap(iterate_sequence, zip(sequences, splits))
 
 	# Create test set, 11 - 21
 	if not os.path.exists(testDir):
 		os.mkdir(testDir)
-	# for i in range(11, 22):
-	# 	sequence = '%02d' % i
-	# 	iterate_sequence(sequence, 'test')
-	sequences = ['%02d' % i for i in range(11, 22)]
-	splits = ['test' for i in range(11, 22)]
-	pool.starmap(iterate_sequence, zip(sequences, splits))
+	for i in range(11, 22):
+		sequence = '%02d' % i
+		iterate_sequence(sequence, 'test')
+	# sequences = ['%02d' % i for i in range(11, 22)]
+	# splits = ['test' for i in range(11, 22)]
+	# pool.starmap(iterate_sequence, zip(sequences, splits))
 
 	pool.close() 
 	pool.join() 
