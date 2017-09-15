@@ -5,8 +5,8 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from multiprocessing.dummy import Pool as ThreadPool 
-from tifffile import imsave
-# import h5py
+# from tifffile import imsave
+import h5py
 
 import pykitti
 
@@ -18,7 +18,7 @@ do_write = True
 
 # Change this to the directory where you store KITTI data
 basedir = '/home/fangchangma/dataset/KITTI_Dataset/dataset'
-outDir = '/home/fangchangma/KITTI'
+outDir = '/home/fangchangma/kitti'
 
 def is_in_view(u, v, z_c, height, width):
 	return (z_c>0 and u>=0 and u<width and v>=0 and v<height)
@@ -67,22 +67,22 @@ def overlay_rgb_depth(rgb, depth):
 				overlay[v,u,:]=[0,0,1]
 	return overlay
 
-# def write_to_hdf5(filename, rgb, depth):
-# 	file = h5py.File(filename, 'w')
-# 	rgb_torch_format = np.transpose( rgb, (2, 0, 1) )
-# 	rgb_dataset = file.create_dataset("rgb", rgb_torch_format.shape, 'uint8', compression="gzip")
-# 	depth_dataset = file.create_dataset("depth", depth.shape, 'float16', compression="gzip")
-# 	# rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8')
-# 	# depth_dataset = file.create_dataset("depth", depth.shape, 'float16')
-# 	rgb_dataset[...] = rgb_torch_format
-# 	depth_dataset[...] = depth
-# 	file.close()
+def write_to_hdf5(filename, rgb, depth):
+	file = h5py.File(filename, 'w')
+	rgb_torch_format = 255 * np.transpose( rgb, (2, 0, 1) )
+	rgb_dataset = file.create_dataset("rgb", rgb_torch_format.shape, 'uint8', compression="gzip")
+	depth_dataset = file.create_dataset("depth", depth.shape, 'float16', compression="gzip")
+	# rgb_dataset = file.create_dataset("rgb", rgb.shape, 'uint8')
+	# depth_dataset = file.create_dataset("depth", depth.shape, 'float16')
+	rgb_dataset[...] = rgb_torch_format
+	depth_dataset[...] = depth
+	file.close()
 
-def write_to_tif(filename, rgb, depth):
-	rgb_filename = '%s-c.tif' % filename
-	depth_filename = '%s-d.tif' % filename
-	imsave(rgb_filename, rgb)
-	imsave(depth_filename, depth)
+# def write_to_tif(filename, rgb, depth):
+# 	rgb_filename = '%s-c.tif' % filename
+# 	depth_filename = '%s-d.tif' % filename
+# 	imsave(rgb_filename, rgb)
+# 	imsave(depth_filename, depth)
 
 def iterate_sequence(sequence, split):
 	# Load the data. Optionally, specify the frame range to load.
@@ -119,7 +119,6 @@ def iterate_sequence(sequence, split):
 		# print('height=' + str(height) + ' width=' + str(width))
 		depth_image2 = create_depth_image(dataset.calib.P_rect_20, dataset.calib.T_cam2_velo, third_velo, height, width)
 		depth_image3 = create_depth_image(dataset.calib.P_rect_30, dataset.calib.T_cam3_velo, third_velo, height, width)
-
 		if do_display:
 			# Create overlay image
 			overlay2 = overlay_rgb_depth(first_rgb[0], depth_image2)
@@ -163,14 +162,14 @@ def iterate_sequence(sequence, split):
 			plt.pause(0.5)
 
 		if do_write:
-			# filenameL = os.path.join(targetDir, '%05d-L.h5' % i)
-			# filenameR = os.path.join(targetDir, '%05d-R.h5' % i)
-			# write_to_hdf5(filenameL, first_rgb[0], depth_image2)
-			# write_to_hdf5(filenameR, first_rgb[1], depth_image3)
-			filenameL = os.path.join(targetDir, '%05d-L' % i)
-			filenameR = os.path.join(targetDir, '%05d-R' % i)
-			write_to_tif(filenameL, first_rgb[0], depth_image2)
-			write_to_tif(filenameR, first_rgb[1], depth_image3)
+			filenameL = os.path.join(targetDir, '%05d-L.h5' % i)
+			filenameR = os.path.join(targetDir, '%05d-R.h5' % i)
+			write_to_hdf5(filenameL, first_rgb[0], depth_image2)
+			write_to_hdf5(filenameR, first_rgb[1], depth_image3)
+			# filenameL = os.path.join(targetDir, '%05d-L' % i)
+			# filenameR = os.path.join(targetDir, '%05d-R' % i)
+			# write_to_tif(filenameL, first_rgb[0], depth_image2)
+			# write_to_tif(filenameR, first_rgb[1], depth_image3)
 
 def main():
 	trainDir = os.path.join(outDir, 'train')
