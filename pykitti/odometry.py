@@ -27,6 +27,9 @@ class odometry:
         # easy use with OpenCV.
         self.imformat = kwargs.get('imformat', None)
 
+        # Default image file extension is 'png'
+        self.imtype = kwargs.get('imtype', 'png')
+
         # Pre-load data that isn't returned as a generator
         self._load_calib()
         self._load_timestamps()
@@ -43,7 +46,11 @@ class odometry:
         # Read and parse the poses
         try:
             with open(pose_file, 'r') as f:
-                for line in f.readlines():
+                lines = f.readlines()
+                if self.frames is not None:
+                    lines = [lines[i] for i in self.frames]
+
+                for line in lines:
                     T_w_cam0 = np.fromstring(line, dtype=float, sep=' ')
                     T_w_cam0 = T_w_cam0.reshape(3, 4)
                     T_w_cam0 = np.vstack((T_w_cam0, [0, 0, 0, 1]))
@@ -56,7 +63,8 @@ class odometry:
     @property
     def cam0(self):
         """Generator to read image files for cam0 (monochrome left)."""
-        impath = os.path.join(self.sequence_path, 'image_0', '*.png')
+        impath = os.path.join(self.sequence_path, 'image_0',
+                              '*.{}'.format(self.imtype))
         imfiles = sorted(glob.glob(impath))
         # Subselect the chosen range of frames, if any
         if self.frames is not None:
@@ -68,7 +76,8 @@ class odometry:
     @property
     def cam1(self):
         """Generator to read image files for cam1 (monochrome right)."""
-        impath = os.path.join(self.sequence_path, 'image_1', '*.png')
+        impath = os.path.join(self.sequence_path, 'image_1',
+                              '*.{}'.format(self.imtype))
         imfiles = sorted(glob.glob(impath))
         # Subselect the chosen range of frames, if any
         if self.frames is not None:
@@ -80,7 +89,8 @@ class odometry:
     @property
     def cam2(self):
         """Generator to read image files for cam2 (RGB left)."""
-        impath = os.path.join(self.sequence_path, 'image_2', '*.png')
+        impath = os.path.join(self.sequence_path, 'image_2',
+                              '*.{}'.format(self.imtype))
         imfiles = sorted(glob.glob(impath))
         # Subselect the chosen range of frames, if any
         if self.frames is not None:
@@ -92,7 +102,8 @@ class odometry:
     @property
     def cam3(self):
         """Generator to read image files for cam0 (RGB right)."""
-        impath = os.path.join(self.sequence_path, 'image_3', '*.png')
+        impath = os.path.join(self.sequence_path, 'image_3',
+                              '*.{}'.format(self.imtype))
         imfiles = sorted(glob.glob(impath))
         # Subselect the chosen range of frames, if any
         if self.frames is not None:
