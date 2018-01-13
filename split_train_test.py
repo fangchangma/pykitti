@@ -17,7 +17,8 @@ do_display = False
 do_write = True
 
 # Change this to the directory where you store KITTI data
-basedir = '/workspace/KITTI'
+# basedir = '/workspace/KITTI'
+basedir = '/home/fangchangma/dataset/KITTI_Dataset/dataset'
 outDir = basedir
 
 def is_in_view(u, v, z_c, height, width):
@@ -176,26 +177,26 @@ def main():
 	testDir = os.path.join(outDir, 'val')
 
 	# Create training set, 00 - 10
-	if not os.path.exists(trainDir):
-		os.mkdir(trainDir)
+	# if not os.path.exists(trainDir):
+	# 	os.mkdir(trainDir)
 
 	pool = ThreadPool(10) 
-	# for i in range(11):
-	#	sequence = '%02d' % i
-	#	iterate_sequence(sequence, 'train')
-	sequences = ['%02d' % i for i in range(11)]
-	splits = ['train' for i in range(11)]
-	pool.starmap(iterate_sequence, zip(sequences, splits))
+	# # for i in range(11):
+	# #	sequence = '%02d' % i
+	# #	iterate_sequence(sequence, 'train')
+	# sequences = ['%02d' % i for i in range(11)]
+	# splits = ['train' for i in range(11)]
+	# pool.starmap(iterate_sequence, zip(sequences, splits))
 
 	# Create test set, 11 - 21
 	if not os.path.exists(testDir):
 		os.mkdir(testDir)
-	# for i in range(11, 22):
-	# 	sequence = '%02d' % i
-	#	iterate_sequence(sequence, 'test')
-	sequences = ['%02d' % i for i in range(11, 22)]
-	splits = ['val' for i in range(11, 22)]
-	pool.starmap(iterate_sequence, zip(sequences, splits))
+	for i in range(11, 22):
+		sequence = '%02d' % i
+		iterate_sequence(sequence, 'val')
+	# sequences = ['%02d' % i for i in range(11, 22)]
+	# splits = ['val' for i in range(11, 22)]
+	# pool.starmap(iterate_sequence, zip(sequences, splits))
 
 	pool.close() 
 	pool.join() 
