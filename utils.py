@@ -6,29 +6,23 @@ from pprint import pprint
 def is_in_view(u, v, z_c, height, width):
     return (z_c>0 and u>=0 and u<width and v>=0 and v<height)
 
-def create_depth_image(projection_matrix, intrinsics, T_velo_to_cam, velo, height, width):
-    coordinates_cam = np.dot(T_velo_to_cam, velo.transpose())
+def create_depth_image(intrinsics, T_velo_to_cam, velo, height, width):
+    reflectance = velo[:,3]
+    points = velo[reflectance>0,:] # keep only lidar measurements with positive reflectance
+    points[:,3] = 1 # convert the coordinates to homogeneous representation by setting 4th column to be all 1's
+    coordinates_cam = np.dot(T_velo_to_cam, points.transpose()) # transform to camera frame
     N = coordinates_cam.shape[1]
 
-    pixels = np.dot(intrinsics, coordinates_cam[:3,:])
-    depth_image_in = np.zeros((height, width))
+    pixels_in = np.dot(intrinsics, coordinates_cam[:3,:])
+    depth = np.zeros((height, width))
     for i in range(0, N):
-        z_c = pixels[2, i]
-        u = int(pixels[0, i] / z_c)
-        v = int(pixels[1, i] / z_c)
+        z_c = pixels_in[2, i]
+        u = int(pixels_in[0, i] / z_c)
+        v = int(pixels_in[1, i] / z_c)
         if is_in_view(u, v, z_c, height, width):
-            depth_image_in[v,u] = coordinates_cam[2,i] 
+            depth[v,u] = coordinates_cam[2,i] 
 
-    pixels = np.dot(projection_matrix, coordinates_cam)[:3, :]
-    depth_image_proj = np.zeros((height, width))
-    for i in range(0, N):
-        z_c = pixels[2, i]
-        u = int(pixels[0, i] / z_c)
-        v = int(pixels[1, i] / z_c)
-        if is_in_view(u, v, z_c, height, width):
-            depth_image_proj[v,u] = coordinates_cam[2,i] 
-
-    return depth_image_in, depth_image_proj
+    return depth
 
 def depth_to_pointcloud(depth, rgb, K):
     pc = np.empty((0,6), float)
@@ -58,7 +52,7 @@ def overlay_rgb_depth(rgb, depth):
     for v in range(0, height):
         for u in range(0, width):
             if depth[v,u] > 0:
-                overlay[v,u,:]=[0,0,1]
+                overlay[v,u,:]=[0,1,1]
     return overlay
 
 def write_to_hdf5(filename, rgb, depth):

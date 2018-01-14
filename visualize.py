@@ -12,16 +12,14 @@ __email__ = "fcma@mit.edu"
 # Change this to the directory where you store KITTI data
 basedir = '/home/fangchangma/dataset/KITTI_Dataset/odometry/dataset'
 
-f, ax = plt.subplots(3, 1, figsize=(12, 12))
+f, ax = plt.subplots(2, 1, figsize=(12, 12))
 f.tight_layout()
 def iterate_sequence(sequence, split):
 
     # dataset = pykitti.odometry(basedir, sequence, frames=range(0, 500, 500))
     dataset = pykitti.odometry(basedir, sequence)
 
-    pprint(dict(dataset.calib._asdict()))
-    # print(dataset.calib.P_rect_20)
-    # print(dataset.calib.P_rect_30)
+    # pprint(dict(dataset.calib._asdict()))
     K_left, K_right = dataset.calib.K_cam2, dataset.calib.K_cam3
 
     # Create data iterator
@@ -30,7 +28,7 @@ def iterate_sequence(sequence, split):
     velo_iterator = dataset.velo
     pose_iterator = dataset.poses
 
-    np.set_printoptions(precision=4, suppress=True)
+    # np.set_printoptions(precision=4, suppress=True)
 
     i = 0
     for rgbs in rgb_iterator:
@@ -42,9 +40,6 @@ def iterate_sequence(sequence, split):
         velodyne = next(velo_iterator)
         pose = next(pose_iterator)
 
-        # if i < 15:
-        #     continue
-
         # Create depth image
         height = left_rgb.shape[0]
         width = left_rgb.shape[1]
@@ -52,24 +47,24 @@ def iterate_sequence(sequence, split):
         print()
         print(pose)
 
-        left_depth_in, depth_image_proj = create_depth_image(dataset.calib.P_rect_20, K_left, dataset.calib.T_cam2_velo, velodyne, height, width)
+        left_depth = create_depth_image(K_left, dataset.calib.T_cam2_velo, velodyne, height, width)
         # right_depth = create_depth_image(K_right, dataset.calib.T_cam3_velo, velodyne, height, width)
 
         # Create overlay image
-        # left_overlay = overlay_rgb_depth(left_rgb, left_depth)
+        left_overlay = overlay_rgb_depth(left_rgb, left_depth)
         # right_overlay = overlay_rgb_depth(right_rgb, right_depth)
         
-        ax[0].imshow(left_rgb)
+        ax[0].imshow(left_overlay)
         ax[0].axis("off")
-        ax[1].imshow(left_depth_in, cmap="hot")
+        ax[1].imshow(left_depth>0)
         ax[1].axis("off")
-        ax[2].imshow(depth_image_proj, cmap="hot")
-        ax[2].axis("off")
+        # ax[2].imshow(depth_image_proj, cmap="hot")
+        # ax[2].axis("off")
 
         print('Sequence ' + sequence + ':' + '%05d' % i + ' rgb.shape=' + str(left_rgb.shape) + ' cropped shape=' + str(left_rgb[130:370, :, :].shape))
 
-        plt.show()
-        # plt.pause(0.5)
+        # plt.show()
+        plt.pause(0.5)
 
 def main():
     for i in range(11):
