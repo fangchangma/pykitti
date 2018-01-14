@@ -14,8 +14,8 @@ do_write = not do_display # implicitly use parallel computing
 
 # Change this to the directory where you store KITTI data
 # basedir = '/workspace/KITTI'
-basedir = '/home/fangchangma/dataset/KITTI_Dataset/odometry/dataset'
-outDir = '/home/fangchangma/dataset/KITTI_Dataset/odometry/'
+basedir = '/lids/fangchang/KITTI/odometry/dataset/'
+outDir = '/workspace/data/kitti'
 trainDir = os.path.join(outDir, 'train')
 testDir = os.path.join(outDir, 'test')
 if not os.path.exists(trainDir):
