@@ -47,7 +47,9 @@ def iterate_sequence(sequence, split):
     # gray_iterator = dataset.gray
     rgb_iterator = dataset.rgb
     velo_iterator = dataset.velo
-    pose_iterator = dataset.poses
+
+    if split == "train":
+        pose_iterator = dataset.poses
     
 
     i = 0
@@ -58,7 +60,10 @@ def iterate_sequence(sequence, split):
         right_rgb = rgbs[1]
 
         velodyne = next(velo_iterator)
-        pose = next(pose_iterator)
+        if split == "train":
+            pose = next(pose_iterator)
+        else:
+            pose = None
 
         # Create depth image
         height = left_rgb.shape[0]
@@ -93,10 +98,10 @@ def main():
     if do_write:
         pool = ThreadPool(10) 
 
-        # Create training set, 00 - 10
-        sequences = ['%02d' % i for i in range(11)]
-        splits = ['train' for i in range(11)]
-        pool.starmap(iterate_sequence, zip(sequences, splits))
+        # # Create training set, 00 - 10
+        # sequences = ['%02d' % i for i in range(11)]
+        # splits = ['train' for i in range(11)]
+        # pool.starmap(iterate_sequence, zip(sequences, splits))
 
         # Create test set, 11 - 21
         sequences = ['%02d' % i for i in range(11, 22)]

@@ -66,14 +66,16 @@ def write_hdf5(filename, left, right, pose):
     left_depth_dataset = file.create_dataset("left_depth", left[1].shape, 'float16', compression="gzip")
     right_rgb_dataset = file.create_dataset("right_rgb", right[0].shape, 'float16', compression="gzip")
     right_depth_dataset = file.create_dataset("right_depth", right[1].shape, 'float16', compression="gzip")
-    pose_dataset = file.create_dataset("pose", pose.shape, 'float16', compression="gzip")
     
     # write contents into datasets
     left_rgb_dataset[...] = left[0]
     left_depth_dataset[...] = left[1]
     right_rgb_dataset[...] = right[0]
     right_depth_dataset[...] = right[1]
-    pose_dataset[...] = pose
+
+    if pose is not None:
+        pose_dataset = file.create_dataset("pose", pose.shape, 'float16', compression="gzip")
+        pose_dataset[...] = pose
 
     file.close()
 
