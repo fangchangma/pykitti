@@ -24,9 +24,11 @@ def is_in_view(u, v, z_c, height, width):
 	return (z_c>0 and u>=0 and u<width and v>=0 and v<height)
 
 def create_depth_image(Pi, Tr, velo, height, width):
-	coordinates_cam = np.dot(Tr, velo.transpose())
+	xyz = velo[:,0:3]
+	N = xyz.shape[0]
+	xyz_homogeneous = np.hstack((xyz, np.ones((N,1))))
+	coordinates_cam = np.dot(Tr, xyz_homogeneous.transpose())
 	pixels = np.dot(Pi, coordinates_cam)
-	N = pixels.shape[1]
 	depth_image = np.zeros((height, width))
 	for i in range(0, N):
 		z_c = pixels[2, i]
